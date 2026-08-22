@@ -21,13 +21,15 @@ information through FreeBSD's native libutil(3) interfaces &ndash;
 in particular [kinfo_getproc(3)](https://man.freebsd.org/kinfo_getproc)
 and [kinfo_getallproc(3)](https://man.freebsd.org/kinfo_getallproc).
 
-## Why "Kernel" ?
+## Install
 
-The two functions that we use are implemented as easy-to-use wrappers
-around [sysctl(3)](https://man.freebsd.org/sysctl) &ndash; which is used
-to query kernel state, including information about active processes, hence
-the name "Kernel Process". It also avoids confusion and conflict with
-mruby-process.
+```ruby
+MRuby::Build.new("app") do |conf|
+  conf.toolchain
+  conf.gembox "default"
+  conf.gem github: "0x1eef/mruby-kernel-process", branch: "main"
+end
+```
 
 ## Quick start
 
@@ -116,9 +118,23 @@ print "hello #{this.command}", "\n" # => hello init
 print "hello #{this.parent.command}", "\n" # => hello kernel
 ```
 
-## ABI
+## FAQ
 
-Supported:
+<details>
+<summary> Why the "Kernel" prefix ?</summary>
+<br>
+<p>
+
+The two functions that we use ([kinfo_getproc(3)](https://man.freebsd.org/kinfo_getproc)
+and [kinfo_getallproc(3)](https://man.freebsd.org/kinfo_getallproc))
+are implemented as easy-to-use wrappers around [sysctl(3)](https://man.freebsd.org/sysctl) &ndash; which is used to query kernel state, including information about
+active processes, hence the name "Kernel Process". It also avoids confusion
+and conflict with mruby-process.
+</p>
+</details>
+<details>
+<summary> What <code>kinfo_proc</code> members are available?</summary>
+<br>
 
 | `struct kinfo_proc` member | Ruby API | Notes |
 | --- | --- | --- |
@@ -136,8 +152,13 @@ Supported:
 | `ki_comm` | `#command` | Command name |
 | `ki_start` | `#start_time`, `#starts_at` | Process start time |
 | `ki_runtime` | `#runtime` | Runtime in microseconds |
-
+</details>
+<details>
+<summary> What <code>kinfo_proc</code> members are <strong>not</strong> available?</summary>
+<br>
+<p>
 Not supported... yet :)
+</p>
 
 | `struct kinfo_proc` member | Notes |
 | --- | --- |
@@ -218,17 +239,8 @@ Not supported... yet :)
 | `ki_sparelongs` | Spare long integer space |
 | `ki_sflag` | `PS_*` flags |
 | `ki_tdflags` | Kernel thread flags |
+</details>
 
-
-## Build
-
-```ruby
-MRuby::Build.new("app") do |conf|
-  conf.toolchain
-  conf.gembox "default"
-  conf.gem github: "0x1eef/mruby-kernel-process", branch: "main"
-end
-```
 
 ## License
 
