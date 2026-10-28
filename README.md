@@ -1,33 +1,69 @@
 <p align="center">
-  <a href="http://git.home.network/0x1eef/mruby-kernel-process">
-    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi39c9ab6rTHulzqrvy45M_omMN8cUyRxfaAph0UhlpubhMxgnJVyOEarYGmHNZgt1uUZmO8cobmrloSiAfxUjgjNOVvRZrF9n9b5tO0S-sG7e9DHfalqyYQZm6aY1jV55IzPbGPA/s1600/freebsd_jail.png" width="200" height="200" border="0" alt="mruby-kernel-process">
+  <a href="https://github.com/altruby/picoruby-freebsd-process">
+    <img src="logo.png" width="200" height="200" border="0" alt="picoruby-freebsd-process">
   </a>
 </p>
 <p align="center">
-  <a href="http://git.home.network/0x1eef/mruby-kernel-process">
-    <img src="https://img.shields.io/badge/FreeBSD-native-blue.svg" alt="FreeBSD-native">
-  </a>
-  <a href="https://opensource.org/license/0bsd">
-    <img src="https://img.shields.io/badge/License-0BSD-orange.svg" alt="License">
-  </a>
+  <strong>picoruby-freebsd-process</strong>
 </p>
 
 ## About
 
-[mruby-kernel-process](https://github.com/0x1eef/mruby-kernel-process)
-provides an object-oriented interface around processes on FreeBSD
-systems. Unlike shelling out to ps(1), this library reads process
-information through FreeBSD's native libutil(3) interfaces &ndash;
-in particular [kinfo_getproc(3)](https://man.freebsd.org/kinfo_getproc)
-and [kinfo_getallproc(3)](https://man.freebsd.org/kinfo_getallproc).
+[picoruby](https://picoruby.org/) + the FreeBSD process API = picoruby-freebsd-process.
+
+This project combines an implementation of ruby that can run on a
+single-chip microcontroller and the process API from the
+[FreeBSD](https://www.freebsd.org/) project. Although
+[picoruby](https://picoruby.org/) markets itself towards embedded devices it
+also happens to run exceptionally well on POSIX systems too. It is more or
+less straight forward to embed picoruby's bytecode into a C program.
+
+The class this project adds is `Kernel::Process`. An instance of it stands for
+one process, and it reads the fields that FreeBSD keeps for that process in its
+`kinfo_proc` structure.
+
+This project was previously known as
+[mruby-kernel-process](https://github.com/altruby/mruby-kernel-process), and it
+was ported to picoruby the same way
+[picoruby-jail](https://github.com/altruby/picoruby-jail) was.
 
 ## Install
+
+#### make
+
+The next few lines will build your own copy
+of the picoruby executable. The executable
+is linked against picoruby-freebsd-process and when it
+is run it automatically has access to the
+picoruby-freebsd-process classes, modules and methods.
+This can be surprising compared to mainstream
+CRuby where there is a single copy of the
+executable that is built once on install:
+
+    $ git clone --recursive-submodules https://github.com/picoruby/picoruby picoruby
+    $ git clone https://github.com/altruby/picoruby-freebsd-process
+    $ cd picoruby-freebsd-process
+    $ make build
+    $ ../picoruby/build/picoruby-freebsd-process/bin/picoruby -e 'p Kernel::Process.self.pid'
+
+#### build_config.rb
+
+The steps:
+
+```sh
+mkdir myapp
+touch build_config.rb
+cd ../picoruby
+MRUBY_CONFIG=../myapp/build_config.rb rake
+```
+
+The configuration (`build_config.rb`):
 
 ```ruby
 MRuby::Build.new("app") do |conf|
   conf.toolchain
   conf.gembox "default"
-  conf.gem github: "0x1eef/mruby-kernel-process", branch: "main"
+  conf.gem github: "altruby/picoruby-freebsd-process", branch: "main"
 end
 ```
 
@@ -35,215 +71,119 @@ end
 
 #### Kernel::Process
 
-The Kernel::Process singleton class is enumerable. It provides
-access to all processes that are visible to a user. We can
-use the `each` method to iterate over processes, we can use
-the `select` method to filter, and we can use the `map` method
-to trasform:
+`Kernel::Process` is enumerable. It provides access to every process that is
+visible to the current process. We can use the `each` method to iterate over
+processes, we can use the `select` method to filter, we can use the `find`
+method to find a process, and we can use the `map` method to transform:
 
 ```ruby
 ##
 # Iterate all
 Kernel::Process.each do |process|
   print "pid=#{process.pid}",
-        "ppid=#{process.ppid}",
+        "command=#{process.command}",
         "uid=#{process.uid}",
         "\n\n"
 end
 
 ##
-# Select root processes
+# Select processes by command
 Kernel::Process.select do |process|
-  process.uid == 0
+  process.command == "sshd"
+end
+
+##
+# Find a process by pid
+process = Kernel::Process.find do |process|
+  process.pid == 1
 end
 
 ##
 # Transform processes
-parents = Kernel::Process.map(&:ppid)
+pids = Kernel::Process.map(&:pid)
 ```
 
 #### Kernel::Process.self
 
-The `Kernel::Process.self` method returns an instance
-of `Kernel::Process` that represents the current process:
+`Kernel::Process.self` returns the `Kernel::Process` that stands for the current
+process. It is the same instance that `find_by` would return for
+`Process.pid`:
 
 ```ruby
-this = Process.self
-print "pid = ", this.pid, "\n"
+process = Kernel::Process.self
+print "pid ", "\t", process.pid     , "\n"
+print "ppid", "\t", process.ppid    , "\n"
+print "uid ", "\t", process.uid     , "\n"
+print "cmd ", "\t", process.command , "\n"
 ```
 
 #### Kernel::Process.find_by
 
-The `Kernel::Process.find_by` method can find a process by ID, and returns an
-instance of `Kernel::Process` or raises an error when a process by the given
-ID cannot be found:
+`Kernel::Process.find_by` finds a process by pid and returns a
+`Kernel::Process` instance:
 
 ```ruby
-process = Kernel::Process.find_by(12345)
-print "pid " , "\t", process.pid  , "\n"  # => process ID
-print "ppid ", "\t", process.ppid , "\n"  # => parent process ID
-print "uid " , "\t", process.uid  , "\n"  # => effective user id
-print "ruid ", "\t", process.ruid , "\n"  # => real user id
-print "svuid", "\t", process.svuid, "\n"  # => saved user id
+process = Kernel::Process.find_by(1)
+print "pid   ", "\t", process.pid        , "\n"
+print "cmd   ", "\t", process.command    , "\n"
+print "start ", "\t", process.start_time , "\n"
+```
+
+A pid that does not exist raises `Errno::ESRCH`.
+
+#### Accessors
+
+| Method | Returns |
+| ------ | ------- |
+| `#pid` | the process id |
+| `#ppid` | the parent process id |
+| `#pgid` | the process group id |
+| `#sid` | the session id |
+| `#tpgid` | the terminal process group id |
+| `#uid` | the user id |
+| `#ruid` | the real user id |
+| `#svuid` | the saved user id |
+| `#login` | the login name |
+| `#login_class` | the login class |
+| `#command` | the command name |
+| `#jid` | the jail id |
+| `#start_time` | a `Time` for when the process started |
+| `#runtime` | the microseconds the process has run for |
+
+#### Kernel::Process#parent
+
+`#parent` returns the parent as a `Kernel::Process` instance, or nil when the
+parent has already exited:
+
+```ruby
+process = Kernel::Process.self
+parent  = process.parent
+print "ppid ", "\t", parent.pid , "\n"
+print "cmd  ", "\t", parent.command , "\n"
 ```
 
 #### Kernel::Process#reload
 
-The `Kernel::Process` object represents a snapshot of a process
-in a moment of time. Certain values, such as the process runtime
-(`Kernel::Process#runtime`) are constantly changing but the process
-snapshot does not capture the new state unless you run
-`Kernel::Process#reload`:
+An instance is a snapshot of a process, and `#reload` takes a new one. It
+returns self, so it can be chained:
 
 ```ruby
-this = Kernel::Process.self
-print "runtime = ", this.runtime
-1.upto(100_000) { }
-print "runtime = ", this.reload.runtime
+process = Kernel::Process.self
+process.reload
+print "cmd ", "\t", process.command , "\n"
 ```
 
-#### Kernel::Process#parent
+#### Kernel::Process#inspect
 
-The `parent` method provides a `Kernel::Process` object that
-represents a parent process, and the method can be used to
-traverse all the way back to the root process (pid 1, `init`),
-and even beyond that (pid 0, `kernel`):
+`#inspect` returns a one line summary of a process:
 
 ```ruby
-this = Kernel::Process.self
-until this.pid == 1
-  this = this.parent
-end
-print "hello #{this.command}", "\n" # => hello init
-print "hello #{this.parent.command}", "\n" # => hello kernel
+puts Kernel::Process.self.inspect
+# => #<Kernel::Process:0x1e0 command=picoruby pid=12345 uid=1000>
 ```
-
-## FAQ
-
-<details>
-<summary> Why the "Kernel" prefix ?</summary>
-<br>
-<p>
-
-The two functions that we use ([kinfo_getproc(3)](https://man.freebsd.org/kinfo_getproc)
-and [kinfo_getallproc(3)](https://man.freebsd.org/kinfo_getallproc))
-are implemented as easy-to-use wrappers around [sysctl(3)](https://man.freebsd.org/sysctl) &ndash; which is used to query kernel state, including information about
-active processes, hence the name "Kernel Process". It also avoids confusion
-and conflict with mruby-process.
-</p>
-</details>
-<details>
-<summary> What <code>kinfo_proc</code> members are available?</summary>
-<br>
-
-| `struct kinfo_proc` member | Ruby API | Notes |
-| --- | --- | --- |
-| `ki_jid` | `#jid` | Process jail ID |
-| `ki_pid` | `#pid` | Process ID |
-| `ki_ppid` | `#ppid`, `#parent` | Parent process ID; `#parent` resolves the parent process object |
-| `ki_pgid` | `#pgid` | Process group ID |
-| `ki_sid` | `#sid` | Session ID |
-| `ki_tpgid` | `#tpgid` | Terminal process group ID |
-| `ki_uid` | `#uid` | Effective user ID |
-| `ki_ruid` | `#ruid` | Real user ID |
-| `ki_svuid` | `#svuid` | Saved effective user ID |
-| `ki_login` | `#login` | Login name |
-| `ki_loginclass` | `#login_class` | Login class |
-| `ki_comm` | `#command` | Command name |
-| `ki_start` | `#start_time`, `#starts_at` | Process start time |
-| `ki_runtime` | `#runtime` | Runtime in microseconds |
-</details>
-<details>
-<summary> What <code>kinfo_proc</code> members are <strong>not</strong> available?</summary>
-<br>
-<p>
-Not supported... yet :)
-</p>
-
-| `struct kinfo_proc` member | Notes |
-| --- | --- |
-| `ki_structsize` | Size of this structure |
-| `ki_layout` | Reserved layout identifier |
-| `ki_args` | Address of command arguments |
-| `ki_paddr` | Address of proc |
-| `ki_addr` | Kernel virtual address of u-area |
-| `ki_tracep` | Pointer to trace file |
-| `ki_textvp` | Pointer to executable file |
-| `ki_fd` | Pointer to open file info |
-| `ki_vmspace` | Pointer to kernel vmspace struct |
-| `ki_wchan` | Sleep address |
-| `ki_tsid` | Terminal session ID |
-| `ki_jobc` | Job control counter |
-| `ki_spare_short1` | Unused alignment field |
-| `ki_tdev_freebsd11` | Legacy controlling TTY device |
-| `ki_siglist` | Signals arrived but not delivered |
-| `ki_sigmask` | Current signal mask |
-| `ki_sigignore` | Signals being ignored |
-| `ki_sigcatch` | Signals being caught by user |
-| `ki_rgid` | Real group ID |
-| `ki_svgid` | Saved effective group ID |
-| `ki_ngroups` | Number of groups |
-| `ki_spare_short2` | Unused alignment field |
-| `ki_groups` | Groups |
-| `ki_size` | Virtual size |
-| `ki_rssize` | Current resident set size in pages |
-| `ki_swrss` | Resident set size before last swap |
-| `ki_tsize` | Text size in pages |
-| `ki_dsize` | Data size in pages |
-| `ki_ssize` | Stack size in pages |
-| `ki_xstat` | Exit status for wait and stop signal |
-| `ki_acflag` | Accounting flags |
-| `ki_pctcpu` | CPU percentage during `ki_swtime` |
-| `ki_estcpu` | Time-averaged value of `ki_cpticks` |
-| `ki_slptime` | Time since last blocked |
-| `ki_swtime` | Time swapped in or out |
-| `ki_cow` | Number of copy-on-write faults |
-| `ki_childtime` | Time used by process children |
-| `ki_flag` | `P_*` flags |
-| `ki_kiflag` | `KI_*` flags |
-| `ki_traceflag` | Kernel trace points |
-| `ki_stat` | `S*` process status |
-| `ki_nice` | Process nice value |
-| `ki_lock` | Process lock count |
-| `ki_rqindex` | Run queue index |
-| `ki_oncpu_old` | Legacy current CPU |
-| `ki_lastcpu_old` | Legacy last CPU |
-| `ki_tdname` | Thread name |
-| `ki_wmesg` | Wait channel message |
-| `ki_lockname` | Lock name |
-| `ki_emul` | Emulation name |
-| `ki_moretdname` | Extended thread name |
-| `ki_sparestrings` | Spare string space |
-| `ki_spareints` | Spare integer space |
-| `ki_reaper` | Reaper process PID |
-| `ki_reapsubtree` | Reaper subtree ID |
-| `ki_tdev` | Controlling TTY device |
-| `ki_oncpu` | Current CPU |
-| `ki_lastcpu` | Last CPU |
-| `ki_tracer` | Tracing process PID |
-| `ki_flag2` | `P2_*` flags |
-| `ki_fibnum` | Default FIB number |
-| `ki_cr_flags` | Credential flags |
-| `ki_numthreads` | Total number of threads |
-| `ki_tid` | Thread ID |
-| `ki_pri` | Process priority |
-| `ki_rusage` | Process resource usage statistics |
-| `ki_rusage_ch` | Child process resource usage statistics |
-| `ki_pcb` | Kernel virtual address of PCB |
-| `ki_kstack` | Kernel virtual address of stack |
-| `ki_udata` | User convenience pointer |
-| `ki_tdaddr` | Address of thread |
-| `ki_pd` | Pointer to process paths info |
-| `ki_uerrmsg` | Address of extended error message storage |
-| `ki_spareptrs` | Spare pointer space |
-| `ki_sparelongs` | Spare long integer space |
-| `ki_sflag` | `PS_*` flags |
-| `ki_tdflags` | Kernel thread flags |
-</details>
-
 
 ## License
 
-[BSD Zero Clause](https://choosealicense.com/licenses/0bsd/)
+[0BSD License](https://opensource.org/license/0bsd)
 <br>
 See [LICENSE](./LICENSE)

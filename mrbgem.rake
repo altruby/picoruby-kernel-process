@@ -1,16 +1,20 @@
-load File.join(__dir__, "mrblib", "kernel", "process", "version.rb")
+load File.join(__dir__, "mrblib", "process", "version.rb")
 
-MRuby::Gem::Specification.new('mruby-kernel-process') do |spec|
+MRuby::Gem::Specification.new("picoruby-freebsd-process") do |spec|
   spec.license = '0BSD'
   spec.author  = '0x1eef'
-  spec.summary = 'mruby bindings for BSD process APIs'
+  spec.summary = 'picoruby + BSD process APIs = picoruby-freebsd-process'
+  spec.version = Kernel::Process::VERSION
 
-  if ENV["BUILD"] == "test"
-    spec.add_dependency 'mruby-minitest', github: "0x1eef/mruby-minitest", branch: "main"
-    spec.add_dependency 'mruby-process', github: '0x1eef/mruby-process', branch: "main"
+  if build.picoruby?
+    spec.require_name = "freebsd-process"
+    spec.add_dependency "mruby-errno", 
+                        github: "mruby/mruby",
+                        branch: "master",
+                        path: "mrbgems/mruby-errno"
   end
 
   spec.cc.flags << '-Wall'
   spec.cc.flags << '-Wpedantic'
-  spec.linker.flags << '-lutil'
+  spec.linker.libraries << 'util'
 end

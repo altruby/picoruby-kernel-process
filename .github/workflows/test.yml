@@ -1,0 +1,53 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PICORUBY_REF: bcce62cb3bc04818d9a511cc67b663c4e6e5c867
+
+jobs:
+  freebsd:
+    runs-on: ubuntu-latest
+    name: FreeBSD
+    timeout-minutes: 30
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+      with:
+        path: picoruby-freebsd-process
+
+    - name: checkout picoruby
+      uses: actions/checkout@v4
+      with:
+        repository: picoruby/picoruby
+        ref: ${{ env.PICORUBY_REF }}
+        path: picoruby
+        submodules: recursive
+
+    - name: Build and test
+      uses: vmactions/freebsd-vm@v1
+      with:
+        copyback: false
+        envs: GITHUB_WORKSPACE
+        run: |
+          set -e
+
+          command -v git >/dev/null 2>&1 || pkg-static install -y git
+          command -v ruby >/dev/null 2>&1 || pkg-static install -y ruby
+          command -v rake >/dev/null 2>&1 || pkg-static install -y rubygem-rake
+
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/picoruby"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/picoruby-freebsd-process"
+
+          uname -a
+          id
+          ruby -v
+          git --version
+
+          cd "$GITHUB_WORKSPACE/picoruby-freebsd-process"
+          make

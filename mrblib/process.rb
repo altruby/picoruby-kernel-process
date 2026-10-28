@@ -3,8 +3,8 @@ module Kernel
     extend Enumerable
     ##
     # @return [Array<Kernel::Process>]
-    def self.each(...)
-      all.each(...)
+    def self.each(&block)
+      all.each(&block)
     end
 
     ##

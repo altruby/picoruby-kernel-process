@@ -1,5 +1,7 @@
 /*
- * mruby-kernel-process — mruby bindings for BSD process APIs
+ * mrb_freebsd_process.c — FreeBSD process bindings for picoruby
+ *
+ * Wraps kvm_getprocs(3) and kinfo_getproc(3) for Kernel::Process.
  */
 
 #include <mruby.h>
@@ -14,12 +16,13 @@
 #include <sys/user.h>
 #include <libutil.h>
 #include <errno.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-void mrb_mruby_kernel_process_gem_init(mrb_state *mrb);
-void mrb_mruby_kernel_process_gem_final(mrb_state *mrb);
+void mrb_picoruby_freebsd_process_gem_init(mrb_state *mrb);
+void mrb_picoruby_freebsd_process_gem_final(mrb_state *mrb);
 static void proc_free(mrb_state *mrb, void *ptr);
 
 static const
@@ -32,7 +35,7 @@ mrb_process_find_by(mrb_state *mrb, mrb_value self)
   struct kinfo_proc *proc;
 
   mrb_get_args(mrb, "i", &pid);
-  proc = kinfo_getproc(pid);
+  proc = kinfo_getproc((pid_t)pid);
   if (proc == NULL) {
     mrb_sys_fail(mrb, "kinfo_getproc");
   }
@@ -167,7 +170,7 @@ mrb_process_svuid(mrb_state *mrb, mrb_value self)
 
   proc = DATA_PTR(self);
   svuid = proc->ki_svuid;
-  return mrb_fixnum_value((mrb_int)(svuid));
+  return mrb_fixnum_value((mrb_int)svuid);
 }
 
 static mrb_value
@@ -178,11 +181,12 @@ mrb_process_login(mrb_state *mrb, mrb_value self)
   char *login;
 
   mrblogin = mrb_str_new_lit(mrb, "");
-  login = malloc(sizeof(char) * LOGNAMELEN+1);
-  if (login == NULL)
+  login = malloc(sizeof(char) * LOGIN_NAME_MAX+1);
+  if (login == NULL) {
     mrb_sys_fail(mrb, "malloc");
+  }
   proc = DATA_PTR(self);
-  memcpy(login, proc->ki_login, LOGNAMELEN+1);
+  memcpy(login, proc->ki_login, LOGIN_NAME_MAX+1);
   mrb_str_cat_cstr(mrb, mrblogin, login);
   free(login);
   return mrblogin;
@@ -197,8 +201,9 @@ mrb_process_loginclass(mrb_state *mrb, mrb_value self)
 
   mrb_login_class = mrb_str_new_lit(mrb, "");
   login_class = malloc(sizeof(char) * LOGINCLASSLEN+1);
-  if (login_class == NULL)
+  if (login_class == NULL) {
     mrb_sys_fail(mrb, "malloc");
+  }
   proc = DATA_PTR(self);
   memcpy(login_class, proc->ki_loginclass, LOGINCLASSLEN+1);
   mrb_str_cat_cstr(mrb, mrb_login_class, login_class);
@@ -215,8 +220,9 @@ mrb_process_command(mrb_state *mrb, mrb_value self)
 
   mrb_command = mrb_str_new_lit(mrb, "");
   command = malloc(sizeof(char) * COMMLEN+1);
-  if (command == NULL)
+  if (command == NULL) {
     mrb_sys_fail(mrb, "malloc");
+  }
   proc = DATA_PTR(self);
   memcpy(command, proc->ki_comm, COMMLEN+1);
   mrb_str_cat_cstr(mrb, mrb_command, command);
@@ -232,7 +238,7 @@ mrb_process_jid(mrb_state *mrb, mrb_value self)
 
   proc = DATA_PTR(self);
   jid = proc->ki_jid;
-  return mrb_fixnum_value((mrb_int) jid);
+  return mrb_fixnum_value((mrb_int)jid);
 }
 
 static mrb_value
@@ -245,7 +251,7 @@ mrb_process_start_time(mrb_state *mrb, mrb_value self)
   cTime = mrb_const_get(mrb, mrb_obj_value(mrb->object_class), mrb_intern_cstr(mrb, "Time"));
   proc = DATA_PTR(self);
   start = proc->ki_start;
-  return mrb_funcall(mrb, cTime, "at", 1, mrb_fixnum_value((mrb_int) start.tv_sec));
+  return mrb_funcall(mrb, cTime, "at", 1, mrb_fixnum_value((mrb_int)start.tv_sec));
 }
 
 static mrb_value
@@ -262,7 +268,7 @@ mrb_process_runtime(mrb_state *mrb, mrb_value self)
   return mrb_fixnum_value(runtime);
 }
 
-mrb_value static
+static mrb_value
 mrb_process_reload(mrb_state *mrb, mrb_value self)
 {
   struct kinfo_proc *proc;
@@ -278,7 +284,7 @@ mrb_process_reload(mrb_state *mrb, mrb_value self)
 }
 
 void
-mrb_mruby_kernel_process_gem_init(mrb_state *mrb)
+mrb_picoruby_freebsd_process_gem_init(mrb_state *mrb)
 {
   struct RClass *cProcess;
 
@@ -308,7 +314,7 @@ mrb_mruby_kernel_process_gem_init(mrb_state *mrb)
 }
 
 void
-mrb_mruby_kernel_process_gem_final(mrb_state *mrb)
+mrb_picoruby_freebsd_process_gem_final(mrb_state *mrb)
 {
   (void)mrb;
 }
