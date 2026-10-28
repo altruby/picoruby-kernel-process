@@ -9,7 +9,7 @@
 
 ## About
 
-[picoruby](https://picoruby.org/) + libutil = picoruby-kernel-process.
+[picoruby](https://picoruby.org/) + freebsd + libutil = picoruby-kernel-process.
 
 This project combines an implementation of ruby that can run on a
 single-chip microcontroller and the process API from the
