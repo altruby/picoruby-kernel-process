@@ -1,4 +1,4 @@
-MRuby::Build.new('picoruby-freebsd-process') do |conf|
+MRuby::Build.new('picoruby-kernel-process') do |conf|
   ##
   # Paths
   root  = File.realpath File.join(__dir__, "..")

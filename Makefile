@@ -1,5 +1,5 @@
 PICORUBY_DIR  ?= ../picoruby
-BUILD_NAME     = picoruby-freebsd-process
+BUILD_NAME     = picoruby-kernel-process
 ROOT          != pwd
 BUILD_CONFIG   = $(ROOT)/build_config/$(BUILD_NAME).rb
 BUILD_DIR      = $(PICORUBY_DIR)/build/$(BUILD_NAME)

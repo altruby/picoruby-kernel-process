@@ -1,5 +1,5 @@
 /*
- * mrb_freebsd_process.c — FreeBSD process bindings for picoruby
+ * mrb_kernel_process.c — FreeBSD process bindings for picoruby
  *
  * Wraps kvm_getprocs(3) and kinfo_getproc(3) for Kernel::Process.
  */
@@ -21,8 +21,8 @@
 #include <string.h>
 #include <unistd.h>
 
-void mrb_picoruby_freebsd_process_gem_init(mrb_state *mrb);
-void mrb_picoruby_freebsd_process_gem_final(mrb_state *mrb);
+void mrb_picoruby_kernel_process_gem_init(mrb_state *mrb);
+void mrb_picoruby_kernel_process_gem_final(mrb_state *mrb);
 static void proc_free(mrb_state *mrb, void *ptr);
 
 static const
@@ -284,7 +284,7 @@ mrb_process_reload(mrb_state *mrb, mrb_value self)
 }
 
 void
-mrb_picoruby_freebsd_process_gem_init(mrb_state *mrb)
+mrb_picoruby_kernel_process_gem_init(mrb_state *mrb)
 {
   struct RClass *cProcess;
 
@@ -314,7 +314,7 @@ mrb_picoruby_freebsd_process_gem_init(mrb_state *mrb)
 }
 
 void
-mrb_picoruby_freebsd_process_gem_final(mrb_state *mrb)
+mrb_picoruby_kernel_process_gem_final(mrb_state *mrb)
 {
   (void)mrb;
 }

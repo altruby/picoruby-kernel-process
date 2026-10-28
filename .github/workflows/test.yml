@@ -19,7 +19,7 @@ jobs:
     - name: checkout code
       uses: actions/checkout@v4
       with:
-        path: picoruby-freebsd-process
+        path: picoruby-kernel-process
 
     - name: checkout picoruby
       uses: actions/checkout@v4
@@ -42,12 +42,12 @@ jobs:
           command -v rake >/dev/null 2>&1 || pkg-static install -y rubygem-rake
 
           git config --global --add safe.directory "$GITHUB_WORKSPACE/picoruby"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE/picoruby-freebsd-process"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/picoruby-kernel-process"
 
           uname -a
           id
           ruby -v
           git --version
 
-          cd "$GITHUB_WORKSPACE/picoruby-freebsd-process"
+          cd "$GITHUB_WORKSPACE/picoruby-kernel-process"
           make

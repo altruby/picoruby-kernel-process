@@ -23,7 +23,7 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
         with:
-          path: picoruby-freebsd-process
+          path: picoruby-kernel-process
 
       - name: install build dependencies
         run: |
@@ -46,15 +46,15 @@ jobs:
           git -C picoruby submodule update --init --depth 1
 
       - name: build
-        working-directory: picoruby-freebsd-process
+        working-directory: picoruby-kernel-process
         run: make build
 
       - name: smoke test
-        working-directory: picoruby-freebsd-process
+        working-directory: picoruby-kernel-process
         run: |
-          ../picoruby/build/picoruby-freebsd-process/bin/picoruby -e 'p Kernel::Process::VERSION'
-          ../picoruby/build/picoruby-freebsd-process/bin/picoruby -e 'p Kernel::Process.self.pid'
+          ../picoruby/build/picoruby-kernel-process/bin/picoruby -e 'p Kernel::Process::VERSION'
+          ../picoruby/build/picoruby-kernel-process/bin/picoruby -e 'p Kernel::Process.self.pid'
 
       - name: run tests
-        working-directory: picoruby-freebsd-process
+        working-directory: picoruby-kernel-process
         run: make test

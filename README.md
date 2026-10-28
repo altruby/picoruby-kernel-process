@@ -1,15 +1,15 @@
 <p align="center">
-  <a href="https://github.com/altruby/picoruby-freebsd-process">
-    <img src="logo.png" width="200" height="200" border="0" alt="picoruby-freebsd-process">
+  <a href="https://github.com/altruby/picoruby-kernel-process">
+    <img src="logo.png" width="200" height="200" border="0" alt="picoruby-kernel-process">
   </a>
 </p>
 <p align="center">
-  <strong>picoruby-freebsd-process</strong>
+  <strong>picoruby-kernel-process</strong>
 </p>
 
 ## About
 
-[picoruby](https://picoruby.org/) + libutil = picoruby-freebsd-process.
+[picoruby](https://picoruby.org/) + libutil = picoruby-kernel-process.
 
 This project combines an implementation of ruby that can run on a
 single-chip microcontroller and the process API from the
@@ -24,19 +24,19 @@ less straight forward to embed picoruby's bytecode into a C program.
 
 The next few lines will build your own copy
 of the picoruby executable. The executable
-is linked against picoruby-freebsd-process
+is linked against picoruby-kernel-process
 and when it is run it automatically has access
-to the picoruby-freebsd-process classes, modules
+to the picoruby-kernel-process classes, modules
 and methods. This can be surprising compared
 to mainstream CRuby where there is a single
 copy of the executable that is built once on
 install:
 
     $ git clone --recursive-submodules https://github.com/picoruby/picoruby picoruby
-    $ git clone https://github.com/altruby/picoruby-freebsd-process
-    $ cd picoruby-freebsd-process
+    $ git clone https://github.com/altruby/picoruby-kernel-process
+    $ cd picoruby-kernel-process
     $ make build
-    $ ../picoruby/build/picoruby-freebsd-process/bin/picoruby -e 'p Kernel::Process.self.pid'
+    $ ../picoruby/build/picoruby-kernel-process/bin/picoruby -e 'p Kernel::Process.self.pid'
 
 #### build_config.rb
 
@@ -55,7 +55,7 @@ The configuration (`build_config.rb`):
 MRuby::Build.new("app") do |conf|
   conf.toolchain
   conf.gembox "default"
-  conf.gem github: "altruby/picoruby-freebsd-process", branch: "main"
+  conf.gem github: "altruby/picoruby-kernel-process", branch: "main"
 end
 ```
 
