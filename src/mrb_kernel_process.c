@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#define LOGIN_NAME_MAX _SC_LOGIN_NAME_MAX
 
 void mrb_picoruby_kernel_process_gem_init(mrb_state *mrb);
 void mrb_picoruby_kernel_process_gem_final(mrb_state *mrb);
