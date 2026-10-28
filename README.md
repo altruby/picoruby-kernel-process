@@ -9,7 +9,7 @@
 
 ## About
 
-[picoruby](https://picoruby.org/) + the FreeBSD process API = picoruby-freebsd-process.
+[picoruby](https://picoruby.org/) + libutil = picoruby-freebsd-process.
 
 This project combines an implementation of ruby that can run on a
 single-chip microcontroller and the process API from the
@@ -18,27 +18,19 @@ single-chip microcontroller and the process API from the
 also happens to run exceptionally well on POSIX systems too. It is more or
 less straight forward to embed picoruby's bytecode into a C program.
 
-The class this project adds is `Kernel::Process`. An instance of it stands for
-one process, and it reads the fields that FreeBSD keeps for that process in its
-`kinfo_proc` structure.
-
-This project was previously known as
-[mruby-kernel-process](https://github.com/altruby/mruby-kernel-process), and it
-was ported to picoruby the same way
-[picoruby-jail](https://github.com/altruby/picoruby-jail) was.
-
 ## Install
 
 #### make
 
 The next few lines will build your own copy
 of the picoruby executable. The executable
-is linked against picoruby-freebsd-process and when it
-is run it automatically has access to the
-picoruby-freebsd-process classes, modules and methods.
-This can be surprising compared to mainstream
-CRuby where there is a single copy of the
-executable that is built once on install:
+is linked against picoruby-freebsd-process
+and when it is run it automatically has access
+to the picoruby-freebsd-process classes, modules
+and methods. This can be surprising compared
+to mainstream CRuby where there is a single
+copy of the executable that is built once on
+install:
 
     $ git clone --recursive-submodules https://github.com/picoruby/picoruby picoruby
     $ git clone https://github.com/altruby/picoruby-freebsd-process
