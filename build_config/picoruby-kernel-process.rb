@@ -27,6 +27,9 @@ MRuby::Build.new('picoruby-kernel-process') do |conf|
   conf.gembox "stdlib"
 
   conf.gem core: "picoruby-picotest"
+  conf.gem gemdir: File.join(mruby, "mrbgems", "mruby-struct")
+  conf.gem gemdir: File.join(mruby, "mrbgems", "mruby-signal")
+  conf.gem gemdir: File.join(mruby, "mrbgems", "mruby-process")
   conf.gem gemdir: File.join(mruby, "mrbgems", "mruby-bin-mirb")
   conf.gem gemdir: root
 end
