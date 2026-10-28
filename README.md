@@ -71,24 +71,20 @@ method to find a process, and we can use the `map` method to transform:
 ```ruby
 ##
 # Iterate all
-Kernel::Process.each do |process|
-  print "pid=#{process.pid}",
-        "command=#{process.command}",
-        "uid=#{process.uid}",
+Kernel::Process.each do
+  print "pid=#{it.pid}",
+        "command=#{it.command}",
+        "uid=#{it.uid}",
         "\n\n"
 end
 
 ##
 # Select processes by command
-Kernel::Process.select do |process|
-  process.command == "sshd"
-end
+Kernel::Process.select { it.command == "sshd" }
 
 ##
 # Find a process by pid
-process = Kernel::Process.find do |process|
-  process.pid == 1
-end
+process = Kernel::Process.find { it.pid == 1 }
 
 ##
 # Transform processes
@@ -107,6 +103,37 @@ print "pid ", "\t", process.pid     , "\n"
 print "ppid", "\t", process.ppid    , "\n"
 print "uid ", "\t", process.uid     , "\n"
 print "cmd ", "\t", process.command , "\n"
+```
+
+#### Kernel::Process#parent
+
+`#parent` returns the parent as a `Kernel::Process` instance, or nil when the
+parent has already exited:
+
+```ruby
+process = Kernel::Process.self
+parent  = process.parent
+print "ppid ", "\t", parent.pid , "\n"
+print "cmd  ", "\t", parent.command , "\n"
+```
+
+#### Kernel::Process#reload
+
+An instance is a snapshot of a process. The `#reload` method 
+captures a new  snapshot. It returns self, so it can be chained:
+
+```ruby
+process = Kernel::Process.self
+print "cmd ", "\t", process.reload.command , "\n"
+```
+
+#### Kernel::Process#inspect
+
+`#inspect` returns a one line summary of a process:
+
+```ruby
+puts Kernel::Process.self.inspect
+# => #<Kernel::Process:0x1e0 command=picoruby pid=12345 uid=1000>
 ```
 
 #### Kernel::Process.find_by
@@ -142,40 +169,8 @@ A pid that does not exist raises `Errno::ESRCH`.
 | `#start_time` | a `Time` for when the process started |
 | `#runtime` | the microseconds the process has run for |
 
-#### Kernel::Process#parent
-
-`#parent` returns the parent as a `Kernel::Process` instance, or nil when the
-parent has already exited:
-
-```ruby
-process = Kernel::Process.self
-parent  = process.parent
-print "ppid ", "\t", parent.pid , "\n"
-print "cmd  ", "\t", parent.command , "\n"
-```
-
-#### Kernel::Process#reload
-
-An instance is a snapshot of a process, and `#reload` takes a new one. It
-returns self, so it can be chained:
-
-```ruby
-process = Kernel::Process.self
-process.reload
-print "cmd ", "\t", process.command , "\n"
-```
-
-#### Kernel::Process#inspect
-
-`#inspect` returns a one line summary of a process:
-
-```ruby
-puts Kernel::Process.self.inspect
-# => #<Kernel::Process:0x1e0 command=picoruby pid=12345 uid=1000>
-```
-
 ## License
 
-[0BSD License](https://opensource.org/license/0bsd)
+[MIT](https://opensource.org/license/MIT)
 <br>
 See [LICENSE](./LICENSE)
